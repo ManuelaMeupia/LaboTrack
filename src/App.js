@@ -11,6 +11,10 @@ import Box from "./admin/pages/Box";
 import Categories from "./admin/pages/Categories";
 import Echantillons from "./admin/pages/Echantillons";
 
+const userRoutes = require("./routes/userRoutes");
+app.use("/api/users", userRoutes);
+
+
 function App() {
   return (
     <BrowserRouter>
