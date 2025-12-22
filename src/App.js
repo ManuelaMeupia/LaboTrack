@@ -11,19 +11,13 @@ import Box from "./admin/pages/Box";
 import Categories from "./admin/pages/Categories";
 import Echantillons from "./admin/pages/Echantillons";
 
-const userRoutes = require("./routes/userRoutes");
-app.use("/api/users", userRoutes);
-
-
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* PAGE LOGIN */}
         <Route path="/login" element={<Login />} />
 
-        {/* DASHBOARD ADMIN LAYOUT */}
         <Route path="/admin" element={<Dashboard />}>
           <Route path="home" element={<Home />} />
           <Route path="users" element={<Users />} />
@@ -33,7 +27,6 @@ function App() {
           <Route path="echantillons" element={<Echantillons />} />
         </Route>
 
-        {/* Page par défaut */}
         <Route path="/" element={<Login />} />
 
       </Routes>
