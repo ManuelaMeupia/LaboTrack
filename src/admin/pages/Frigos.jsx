@@ -1,116 +1,88 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api from "../../api/AxiosConfig";
 
 function Frigos() {
-  const [frigos, setFrigos] = useState([
-    { id: 1, nom: "Frigo A", localisation: "Salle 1", capacite: 120 },
-    { id: 2, nom: "Frigo B", localisation: "Salle 2", capacite: 90 },
-  ]);
-
-  const [showModal, setShowModal] = useState(false);
-  const [newFrigo, setNewFrigo] = useState({
+  const [frigos, setFrigos] = useState([]);
+  const [formData, setFormData] = useState({
     nom: "",
+    code: "",
     localisation: "",
-    capacite: "",
   });
+  const [editingId, setEditingId] = useState(null);
 
-  function handleChange(event) {
-    const { name, value } = event.target;
-    setNewFrigo(prev => ({ ...prev, [name]: value }));
+  useEffect(() => {
+    fetchFrigos();
+  }, []);
+
+  async function fetchFrigos() {
+    const res = await api.get("/frigos");
+    setFrigos(res.data);
   }
 
-  function ajouterFrigo(event) {
-    event.preventDefault();
+  function handleChange(e) {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  }
 
-    setFrigos(prev => [
-      ...prev,
-      { id: Date.now(), ...newFrigo }
-    ]);
+  async function handleSubmit(e) {
+    e.preventDefault();
 
-    setShowModal(false);
-    setNewFrigo({ nom: "", localisation: "", capacite: "" });
+    if (editingId) {
+      await api.put(`/frigos/${editingId}`, formData);
+      setEditingId(null);
+    } else {
+      await api.post("/frigos", formData);
+    }
+
+    setFormData({ nom: "", code: "", localisation: "" });
+    fetchFrigos();
+  }
+
+  async function handleDelete(id) {
+    if (window.confirm("Supprimer ce frigo ?")) {
+      await api.delete(`/frigos/${id}`);
+      fetchFrigos();
+    }
+  }
+
+  function handleEdit(frigo) {
+    setFormData(frigo);
+    setEditingId(frigo._id);
   }
 
   return (
     <div>
       <h2>Gestion des Frigos</h2>
 
-      <button className="btn-primary" style={{ marginTop: "15px" }}
-        onClick={() => setShowModal(true)}
-      >
-        + Ajouter un Frigo
-      </button>
+      <form onSubmit={handleSubmit}>
+        <input name="nom" value={formData.nom} onChange={handleChange} placeholder="Nom" required />
+        <input name="code" value={formData.code} onChange={handleChange} placeholder="Code" required />
+        <input name="localisation" value={formData.localisation} onChange={handleChange} placeholder="Localisation" required />
+        <button type="submit">{editingId ? "Modifier" : "Ajouter"}</button>
+      </form>
 
-      <table className="table" style={{ marginTop: "20px" }}>
+      <table border="1" cellPadding="10">
         <thead>
           <tr>
             <th>Nom</th>
+            <th>Code</th>
             <th>Localisation</th>
-            <th>Capacité</th>
+            <th>Actions</th>
           </tr>
         </thead>
-
         <tbody>
-          {frigos.map(f => (
-            <tr key={f.id}>
+          {frigos.map((f) => (
+            <tr key={f._id}>
               <td>{f.nom}</td>
+              <td>{f.code}</td>
               <td>{f.localisation}</td>
-              <td>{f.capacite}</td>
+              <td>
+                <button onClick={() => handleEdit(f)}>Modifier</button>
+                <button onClick={() => handleDelete(f._id)}>Supprimer</button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      {/* Modal ajout */}
-      {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-
-            <h3>Ajouter un Frigo</h3>
-
-            <form onSubmit={ajouterFrigo}>
-              <input
-                className="input"
-                name="nom"
-                placeholder="Nom"
-                value={newFrigo.nom}
-                onChange={handleChange}
-                required
-              />
-
-              <input
-                className="input"
-                name="localisation"
-                placeholder="Localisation"
-                value={newFrigo.localisation}
-                onChange={handleChange}
-                required
-              />
-
-              <input
-                className="input"
-                name="capacite"
-                placeholder="Capacité"
-                type="number"
-                value={newFrigo.capacite}
-                onChange={handleChange}
-                required
-              />
-
-              <button className="btn-primary" type="submit">
-                Ajouter
-              </button>
-            </form>
-
-            <button className="btn-danger" style={{ marginTop: "10px" }}
-              onClick={() => setShowModal(false)}
-            >
-              Annuler
-            </button>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

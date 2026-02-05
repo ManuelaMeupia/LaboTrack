@@ -1,8 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import "./App.css";
 import Login from "./auth/Login";
+import ProtectedRoute from "./auth/ProtectedRoute";
+
 import Dashboard from "./admin/Dashboard";
 import Home from "./admin/pages/Home";
 import Users from "./admin/pages/Users";
@@ -16,9 +17,18 @@ function App() {
     <BrowserRouter>
       <Routes>
 
+        {/* LOGIN */}
         <Route path="/login" element={<Login />} />
 
-        <Route path="/admin" element={<Dashboard />}>
+        {/* ROUTES ADMIN PROTÉGÉES */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        >
           <Route path="home" element={<Home />} />
           <Route path="users" element={<Users />} />
           <Route path="frigos" element={<Frigos />} />
@@ -27,8 +37,8 @@ function App() {
           <Route path="echantillons" element={<Echantillons />} />
         </Route>
 
+        {/* Défaut */}
         <Route path="/" element={<Login />} />
-
       </Routes>
     </BrowserRouter>
   );

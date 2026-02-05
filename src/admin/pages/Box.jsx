@@ -1,122 +1,133 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api from "../../api/AxiosConfig";
 
 function Box() {
-  const [box, setBox] = useState([
-    { id: 1, nom: "Box A", frigo: "Frigo A", capacite: 20 },
-    { id: 2, nom: "Box B", frigo: "Frigo B", capacite: 15 },
-  ]);
+  const [boxs, setBoxs] = useState([]);
+  const [frigos, setFrigos] = useState([]);
 
-  const [showModal, setShowModal] = useState(false);
-
-  const [newBox, setNewBox] = useState({
+  const [formData, setFormData] = useState({
     nom: "",
-    frigo: "",
     capacite: "",
+    frigoId: "",
   });
 
-  function handleChange(event) {
-    const { name, value } = event.target;
-    setNewBox(prev => ({ ...prev, [name]: value }));
+  // Charger box + frigos
+  useEffect(() => {
+    fetchBoxs();
+    fetchFrigos();
+  }, []);
+
+  async function fetchBoxs() {
+    const res = await api.get("/boxs");
+    setBoxs(res.data);
   }
 
-  function ajouterBox(e) {
+  async function fetchFrigos() {
+    const res = await api.get("/frigos");
+    setFrigos(res.data);
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault();
+    await api.post("/boxs", formData);
 
-    setBox(prev => [
-      ...prev,
-      { id: Date.now(), ...newBox }
-    ]);
+    setFormData({
+      nom: "",
+      capacite: "",
+      frigoId: "",
+    });
 
-    setShowModal(false);
-    setNewBox({ nom: "", frigo: "", capacite: "" });
+    fetchBoxs();
+  }
+
+  async function handleDelete(id) {
+    if (window.confirm("Supprimer cette box ?")) {
+      await api.delete(`/boxs/${id}`);
+      fetchBoxs();
+    }
   }
 
   return (
     <div>
       <h2>Gestion des Box</h2>
 
-      <button className="btn-primary" style={{ marginTop: "15px" }}
-        onClick={() => setShowModal(true)}
-      >
-        + Ajouter une Box
-      </button>
+      {/* FORMULAIRE */}
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <input
+          name="nom"
+          placeholder="Nom de la box"
+          value={formData.nom}
+          onChange={handleChange}
+          required
+        />
 
-      <table className="table" style={{ marginTop: "20px" }}>
+        <input
+          name="capacite"
+          placeholder="Capacité"
+          value={formData.capacite}
+          onChange={handleChange}
+          required
+        />
+
+        <select
+          name="frigoId"
+          value={formData.frigoId}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Choisir un frigo</option>
+          {frigos.map((frigo) => (
+            <option key={frigo._id} value={frigo._id}>
+              {frigo.nom}
+            </option>
+          ))}
+        </select>
+
+        <button type="submit">Ajouter</button>
+      </form>
+
+      {/* TABLEAU */}
+      <table style={styles.table}>
         <thead>
           <tr>
             <th>Nom</th>
-            <th>Frigo</th>
             <th>Capacité</th>
+            <th>Frigo</th>
+            <th>Action</th>
           </tr>
         </thead>
-
         <tbody>
-          {box.map(b => (
-            <tr key={b.id}>
-              <td>{b.nom}</td>
-              <td>{b.frigo}</td>
-              <td>{b.capacite}</td>
+          {boxs.map((box) => (
+            <tr key={box._id}>
+              <td>{box.nom}</td>
+              <td>{box.capacite}</td>
+              <td>{box.frigoId?.nom}</td>
+              <td>
+                <button onClick={() => handleDelete(box._id)}>Supprimer</button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-
-      {/* Modal */}
-      {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-
-            <h3>Ajouter une Box</h3>
-
-            <form onSubmit={ajouterBox}>
-
-              <input
-                className="input"
-                name="nom"
-                placeholder="Nom"
-                value={newBox.nom}
-                onChange={handleChange}
-                required
-              />
-
-              <input
-                className="input"
-                name="frigo"
-                placeholder="Frigo"
-                value={newBox.frigo}
-                onChange={handleChange}
-                required
-              />
-
-              <input
-                className="input"
-                name="capacite"
-                type="number"
-                placeholder="Capacité"
-                value={newBox.capacite}
-                onChange={handleChange}
-                required
-              />
-
-              <button className="btn-primary" type="submit">
-                Ajouter
-              </button>
-
-            </form>
-
-            <button className="btn-danger" style={{ marginTop: "10px" }}
-              onClick={() => setShowModal(false)}
-            >
-              Annuler
-            </button>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
+
+const styles = {
+  form: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "20px",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
+};
 
 export default Box;

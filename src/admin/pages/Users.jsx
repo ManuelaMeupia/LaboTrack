@@ -1,289 +1,295 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../../api/AxiosConfig";
-import { FaEdit, FaTrash, FaUserPlus } from "react-icons/fa";
 
 function Users() {
   const [users, setUsers] = useState([]);
-  const [search, setSearch] = useState("");
+  const [editingUser, setEditingUser] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
-  const [formData, setFormData] = useState({
-    name: "",
+  const initialForm = {
+    nom: "",
     email: "",
+    mot_de_passe: "",
     role: "visiteur",
-    password: ""
-  });
+  };
 
-  // --- TEMP DATA (en attendant le backend) ---
+  const [formData, setFormData] = useState(initialForm);
+
   useEffect(() => {
-    setUsers([
-      { id: 1, name: "Admin", email: "admin@mail.com", role: "admin" },
-      { id: 2, name: "Dr. Paul", email: "paul@mail.com", role: "personnel" },
-      { id: 3, name: "Claire", email: "claire@mail.com", role: "visiteur" }
-    ]);
+    fetchUsers();
   }, []);
 
-  // --- Gestion formulaire ---
+  async function fetchUsers() {
+    const res = await api.get("/users");
+    setUsers(res.data);
+  }
+
   function handleChange(e) {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData({ ...formData, [name]: value });
   }
 
-  function openCreateModal() {
-    setIsEditing(false);
-    setFormData({ name: "", email: "", role: "visiteur", password: "" });
-    setShowModal(true);
+  function resetForm() {
+    setFormData(initialForm);
+    setEditingUser(null);
   }
 
-  function openEditModal(user) {
-    setIsEditing(true);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      password: ""
-    });
-    setShowModal(true);
-  }
-
-  function handleDelete(id) {
-    if (window.confirm("Voulez-vous supprimer cet utilisateur ?")) {
-      setUsers(users.filter((u) => u.id !== id));
-    }
-  }
-
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
-    if (isEditing) {
-      alert("Modification faite (mock front-end)");
+    if (editingUser) {
+      await api.put(`/users/${editingUser._id}`, formData);
     } else {
-      alert("Utilisateur créé (mock front-end)");
+      await api.post("/users", formData);
     }
 
-    setShowModal(false);
+    resetForm();
+    fetchUsers();
   }
 
-  // --- Recherche ---
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  function handleEdit(user) {
+    setEditingUser(user);
+    setFormData({
+      nom: user.nom,
+      email: user.email,
+      role: user.role,
+      mot_de_passe: "",
+    });
+  }
+
+  function confirmDelete(user) {
+    setUserToDelete(user);
+    setShowModal(true);
+  }
+
+  async function handleDelete() {
+    await api.delete(`/users/${userToDelete._id}`);
+    setShowModal(false);
+    setUserToDelete(null);
+    fetchUsers();
+  }
 
   return (
     <div style={styles.container}>
-
       <h2>Gestion des utilisateurs</h2>
 
-      {/* Bar d'actions */}
-      <div style={styles.actions}>
-        <input
-          type="text"
-          placeholder="Rechercher..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={styles.search}
-        />
+      {/* FORMULAIRE */}
+      <div style={styles.card}>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <input
+            style={styles.input}
+            name="nom"
+            placeholder="Nom"
+            value={formData.nom}
+            onChange={handleChange}
+            required
+          />
 
-        <button style={styles.addBtn} onClick={openCreateModal}>
-          <FaUserPlus style={{ marginRight: "6px" }} />
-          Ajouter
-        </button>
+          <input
+            style={styles.input}
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+
+          {!editingUser && (
+            <input
+              style={styles.input}
+              type="password"
+              name="mot_de_passe"
+              placeholder="Mot de passe"
+              value={formData.mot_de_passe}
+              onChange={handleChange}
+              required
+            />
+          )}
+
+          <select
+            style={styles.input}
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+          >
+            <option value="visiteur">Visiteur</option>
+            <option value="personnel">Personnel</option>
+            <option value="admin">Admin</option>
+          </select>
+
+          <button type="submit" style={styles.primaryBtn}>
+            {editingUser ? "Modifier" : "Créer"}
+          </button>
+        </form>
       </div>
 
       {/* TABLEAU */}
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Email</th>
-            <th>Rôle</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredUsers.map((u) => (
-            <tr key={u.id}>
-              <td>{u.name}</td>
-              <td>{u.email}</td>
-              <td>{u.role}</td>
-              <td>
-                <button style={styles.editBtn} onClick={() => openEditModal(u)}>
-                  <FaEdit />
-                </button>
-
-                <button style={styles.deleteBtn} onClick={() => handleDelete(u.id)}>
-                  <FaTrash />
-                </button>
-              </td>
+      <div style={styles.card}>
+        <table style={styles.table}>
+          <thead style={styles.thead}>
+            <tr>
+              <th>Nom</th>
+              <th>Email</th>
+              <th>Rôle</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr key={u._id} style={styles.row}>
+                <td>{u.nom}</td>
+                <td>{u.email}</td>
+                <td>
+                  <span style={styles.roleBadge(u.role)}>{u.role}</span>
+                </td>
+                <td>
+                  <button onClick={() => handleEdit(u)} style={styles.editBtn}>
+                    Modifier
+                  </button>
+                  <button onClick={() => confirmDelete(u)} style={styles.deleteBtn}>
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {/* MODAL */}
+      {/* POPUP */}
       {showModal && (
-        <div style={styles.modal}>
-          <div style={styles.modalContent}>
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
+            <h3>Confirmer la suppression</h3>
+            <p>
+              Voulez-vous vraiment supprimer{" "}
+              <strong>{userToDelete.nom}</strong> ?
+            </p>
 
-            <h3>{isEditing ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}</h3>
-
-            <form onSubmit={handleSubmit}>
-
-              <input
-                type="text"
-                name="name"
-                placeholder="Nom complet"
-                value={formData.name}
-                onChange={handleChange}
-                style={styles.input}
-                required
-              />
-
-              <input
-                type="email"
-                name="email"
-                placeholder="Adresse email"
-                value={formData.email}
-                onChange={handleChange}
-                style={styles.input}
-                required
-              />
-
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                style={styles.input}
-              >
-                <option value="visiteur">Visiteur</option>
-                <option value="personnel">Personnel</option>
-              </select>
-
-              {!isEditing && (
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Mot de passe"
-                  value={formData.password}
-                  onChange={handleChange}
-                  style={styles.input}
-                  required
-                />
-              )}
-
-              <button style={styles.saveBtn} type="submit">
-                {isEditing ? "Mettre à jour" : "Créer"}
+            <div style={styles.modalButtons}>
+              <button onClick={handleDelete} style={styles.deleteBtn}>
+                Oui, supprimer
               </button>
-
-              <button style={styles.cancelBtn} onClick={() => setShowModal(false)}>
+              <button
+                onClick={() => setShowModal(false)}
+                style={styles.cancelBtn}
+              >
                 Annuler
               </button>
-
-            </form>
-
+            </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
 const styles = {
-  container: {
+  container: { padding: "30px" },
+
+  card: {
+    background: "#fff",
     padding: "20px",
+    borderRadius: "8px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+    marginBottom: "20px",
   },
-  actions: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "20px"
-  },
-  search: {
+
+  form: { display: "grid", gap: "10px" },
+
+  input: {
     padding: "10px",
-    width: "250px",
+    borderRadius: "6px",
     border: "1px solid #ccc",
-    borderRadius: "6px"
   },
-  addBtn: {
-    background: "#052c65",
-    color: "white",
+
+  primaryBtn: {
+    background: "#0056b3",
+    color: "#fff",
     border: "none",
-    padding: "10px 20px",
+    padding: "10px",
     borderRadius: "6px",
     cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
   },
-  table: {
-    width: "100%",
-    background: "white",
-    borderRadius: "8px",
-    padding: "10px",
-    borderCollapse: "collapse",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
+
+  table: { width: "100%", borderCollapse: "collapse" },
+
+  thead: {
+    background: "#0056b3",
+    color: "#fff",
+    textAlign: "left",
   },
+
+  row: { borderBottom: "1px solid #eee" },
+
+  roleBadge: (role) => ({
+    padding: "5px 10px",
+    borderRadius: "20px",
+    fontSize: "12px",
+    color: "#fff",
+    background:
+      role === "admin"
+        ? "#28a745"
+        : role === "personnel"
+        ? "#ffc107"
+        : "#6c757d",
+  }),
+
   editBtn: {
-    background: "#0b5ed7",
+    background: "#17a2b8",
     border: "none",
-    color: "white",
-    padding: "6px",
+    padding: "6px 10px",
     marginRight: "5px",
-    borderRadius: "5px",
-    cursor: "pointer"
+    borderRadius: "4px",
+    color: "#fff",
+    cursor: "pointer",
   },
+
   deleteBtn: {
     background: "#dc3545",
     border: "none",
-    color: "white",
-    padding: "6px",
-    borderRadius: "5px",
-    cursor: "pointer"
+    padding: "6px 10px",
+    borderRadius: "4px",
+    color: "#fff",
+    cursor: "pointer",
   },
-  modal: {
+
+  cancelBtn: {
+    background: "#999",
+    color: "#fff",
+    border: "none",
+    padding: "6px 10px",
+    borderRadius: "4px",
+    cursor: "pointer",
+  },
+
+  modalOverlay: {
     position: "fixed",
-    top: 0, left: 0,
-    width: "100%", height: "100%",
-    background: "rgba(0,0,0,0.5)",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.4)",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
-  modalContent: {
-    background: "white",
-    padding: "20px",
+
+  modal: {
+    background: "#fff",
+    padding: "25px",
+    borderRadius: "8px",
     width: "350px",
-    borderRadius: "8px"
+    textAlign: "center",
   },
-  input: {
-    width: "100%",
-    padding: "10px",
-    marginBottom: "10px",
-    borderRadius: "6px",
-    border: "1px solid #ccc"
+
+  modalButtons: {
+    marginTop: "20px",
+    display: "flex",
+    justifyContent: "space-around",
   },
-  saveBtn: {
-    width: "100%",
-    padding: "10px",
-    background: "#052c65",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer"
-  },
-  cancelBtn: {
-    width: "100%",
-    padding: "10px",
-    background: "gray",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    marginTop: "10px",
-    cursor: "pointer"
-  }
 };
 
 export default Users;
