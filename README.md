@@ -21,13 +21,16 @@ Ce projet est réalisé dans le cadre d’un projet de fin de stage en Génie Lo
 ## Technologies utilisées
 ### Frontend
 - React.js
-- React Router
+- React Router DOM
 - CSS
 
 ### Backend
 - Node.js
 - Express.js
 - MongoDB
+- Mongoose
+- JWT (authentification)
+- Bcrypt (hash des mots de passe)
 
 ## Modélisation
 - Diagramme de classes UML
@@ -37,7 +40,7 @@ Ce projet est réalisé dans le cadre d’un projet de fin de stage en Génie Lo
 - Analyse du besoin (fait)
 - Modélisation UML (fait)
 - Développement du frontend (en cours)
-- Mise en place du backend (pas encore fait)
+- Mise en place du backend (en cours)
 
 ##  Réalisé par
 **MEUPIA DJILE MANUELA**  
