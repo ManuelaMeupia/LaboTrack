@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../../api/AxiosConfig";
 
 function Box() {
-  const [boxs, setBoxs] = useState([]);
+  const [boxes, setBoxes] = useState([]);
   const [frigos, setFrigos] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -11,15 +11,15 @@ function Box() {
     frigoId: "",
   });
 
-  // Charger box + frigos
+  // Charger boxes + frigos
   useEffect(() => {
-    fetchBoxs();
+    fetchBoxes();
     fetchFrigos();
   }, []);
 
-  async function fetchBoxs() {
-    const res = await api.get("/boxs");
-    setBoxs(res.data);
+  async function fetchBoxes() {
+    const res = await api.get("/boxes"); // ✅ corrigé
+    setBoxes(res.data);
   }
 
   async function fetchFrigos() {
@@ -34,7 +34,8 @@ function Box() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await api.post("/boxs", formData);
+
+    await api.post("/boxes", formData); // ✅ corrigé
 
     setFormData({
       nom: "",
@@ -42,13 +43,13 @@ function Box() {
       frigoId: "",
     });
 
-    fetchBoxs();
+    fetchBoxes();
   }
 
   async function handleDelete(id) {
     if (window.confirm("Supprimer cette box ?")) {
-      await api.delete(`/boxs/${id}`);
-      fetchBoxs();
+      await api.delete(`/boxes/${id}`); // ✅ corrigé
+      fetchBoxes();
     }
   }
 
@@ -92,28 +93,25 @@ function Box() {
       </form>
 
       {/* TABLEAU */}
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Capacité</th>
-            <th>Frigo</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {boxs.map((box) => (
-            <tr key={box._id}>
-              <td>{box.nom}</td>
-              <td>{box.capacite}</td>
-              <td>{box.frigoId?.nom}</td>
-              <td>
-                <button onClick={() => handleDelete(box._id)}>Supprimer</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <tbody>
+  {boxes.map((box) => (
+    <tr key={box._id}>
+      <td>{box.nom}</td>
+      <td>{box.capacite}</td>
+      <td>{box.frigoId?.nom}</td>
+      <td>
+        <button
+          onClick={() =>
+            window.location.href = `/admin/box/${box._id}/grid`
+          }
+        >
+          Ouvrir
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
     </div>
   );
 }

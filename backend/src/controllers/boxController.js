@@ -7,37 +7,28 @@ exports.createBox = async (req, res) => {
     await box.save();
     res.status(201).json(box);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
-// 🔹 Lire toutes les box
-exports.getBoxs = async (req, res) => {
+// 🔹 Toutes les box
+exports.getAllBoxes = async (req, res) => {
   try {
-    const boxs = await Box.find().populate("frigoId");
-    res.json(boxs);
+    const boxes = await Box.find().populate("frigoId");
+    res.json(boxes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// 🔹 Modifier une box
-exports.updateBox = async (req, res) => {
+// Box d’un frigo précis
+exports.getBoxesByFrigo = async (req, res) => {
   try {
-    const box = await Box.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    res.json(box);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    const boxes = await Box.find({
+      frigoId: req.params.frigoId,
+    }).populate("frigoId");
 
-// 🔹 Supprimer une box
-exports.deleteBox = async (req, res) => {
-  try {
-    await Box.findByIdAndDelete(req.params.id);
-    res.json({ message: "Box supprimée" });
+    res.json(boxes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

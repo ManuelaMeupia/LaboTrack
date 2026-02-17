@@ -3,7 +3,11 @@ import AdminSidebar from "./components/AdminSidebar";
 import AdminNavbar from "./components/AdminNavbar";
 import { Outlet } from "react-router-dom";
 
+const user = JSON.parse(localStorage.getItem("user"));
+
+
 function Dashboard() {
+  
   return (
     <div style={styles.container}>
 

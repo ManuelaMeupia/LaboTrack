@@ -11,6 +11,9 @@ import Frigos from "./admin/pages/Frigos";
 import Box from "./admin/pages/Box";
 import Categories from "./admin/pages/Categories";
 import Echantillons from "./admin/pages/Echantillons";
+// import Echantillons from "./pages/Echantillons";
+import BoxGrid from "./pages/admin/BoxGrid";
+
 
 function App() {
   return (
@@ -35,6 +38,7 @@ function App() {
           <Route path="box" element={<Box />} />
           <Route path="categories" element={<Categories />} />
           <Route path="echantillons" element={<Echantillons />} />
+          <Route path="box/:boxId/grid" element={<BoxGrid />} />
         </Route>
 
         {/* Défaut */}

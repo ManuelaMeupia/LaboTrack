@@ -3,14 +3,14 @@ const router = express.Router();
 
 const {
   createBox,
-  getBoxs,
-  updateBox,
-  deleteBox,
+  getAllBoxes,
+  getBoxesByFrigo,
 } = require("../controllers/boxController");
 
 router.post("/", createBox);
-router.get("/", getBoxs);
-router.put("/:id", updateBox);
-router.delete("/:id", deleteBox);
+router.get("/", getAllBoxes);
+
+// 🔥 route intelligente
+router.get("/frigo/:frigoId", getBoxesByFrigo);
 
 module.exports = router;

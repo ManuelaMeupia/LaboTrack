@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import api from "../../api/AxiosConfig";
+import api from "../api/AxiosConfig";
 
 function Echantillons() {
+  <h1>JE SUIS DANS LE BON FICHIER</h1>
+
   const [samples, setSamples] = useState([]);
   const [search, setSearch] = useState("");
   const [result, setResult] = useState(null);
@@ -27,11 +29,19 @@ function Echantillons() {
     }
   };
 
+  const deleteSample = async (id) => {
+    if (window.confirm("Supprimer cet échantillon ?")) {
+      await api.delete(`/samples/${id}`);
+      fetchSamples();
+      setResult(null);
+    }
+  };
+
   return (
     <div style={{ padding: "20px" }}>
-      <h2>Consultation des Échantillons</h2>
+      <h2>Gestion des Échantillons</h2>
 
-      {/* 🔎 Barre de recherche */}
+      {/* 🔎 Recherche */}
       <div style={{ marginBottom: "20px" }}>
         <input
           type="text"
@@ -40,7 +50,7 @@ function Echantillons() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <button onClick={handleSearch}>Rechercher</button>
-        <button onClick={() => { setSearch(""); setResult(null); }}>
+        <button onClick={() => { setResult(null); setSearch(""); }}>
           Réinitialiser
         </button>
       </div>
@@ -57,6 +67,7 @@ function Echantillons() {
             <th>Frigo</th>
             <th>Box</th>
             <th>Position</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -71,6 +82,11 @@ function Echantillons() {
               <td>{s.frigoId?.nom}</td>
               <td>{s.boxId?.nom}</td>
               <td>{s.position}</td>
+              <td>
+                <button onClick={() => deleteSample(s._id)}>
+                  Supprimer
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

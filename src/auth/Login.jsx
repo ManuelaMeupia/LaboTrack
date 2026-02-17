@@ -22,18 +22,37 @@ function Login() {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    try {
-      const response = await api.post("/auth/login", formData);
+  try {
+    const response = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
 
-      login(response.data.user, response.data.token);
-      navigate("/admin/home");
-    } catch (err) {
-      setError("Email ou mot de passe incorrect");
+    const data = await response.json();
+    console.log("DATA:", data);
+
+    if (!response.ok) {
+      setError(data.message);
+      return;
     }
+
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
+
+    login(data.user, data.token);
+    navigate("/admin/home");
+
+  } catch (err) {
+    console.log(err);
+    setError("Erreur serveur");
   }
+}
 
   return (
     <div style={styles.container}>
