@@ -3,7 +3,8 @@ import AdminSidebar from "./components/AdminSidebar";
 import AdminNavbar from "./components/AdminNavbar";
 import { Outlet } from "react-router-dom";
 
-const user = JSON.parse(localStorage.getItem("user"));
+const storedUser = localStorage.getItem("user");
+const user = storedUser ? JSON.parse(storedUser) : null;
 
 
 function Dashboard() {

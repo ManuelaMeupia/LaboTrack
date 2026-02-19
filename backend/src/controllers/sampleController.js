@@ -3,13 +3,20 @@ const Sample = require("../models/Sample");
 // Créer
 exports.createSample = async (req, res) => {
   try {
+    console.log("BODY REÇU :", req.body);
+
     const sample = new Sample(req.body);
     await sample.save();
+
     res.status(201).json(sample);
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("ERREUR MONGOOSE :", error);
+    res.status(400).json({ error: error.message });
   }
 };
+
+
 
 // Lire tous
 // Lire tous

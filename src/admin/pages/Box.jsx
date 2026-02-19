@@ -93,7 +93,8 @@ function Box() {
       </form>
 
       {/* TABLEAU */}
-      <tbody>
+      <table>
+        <tbody>
   {boxes.map((box) => (
     <tr key={box._id}>
       <td>{box.nom}</td>
@@ -111,6 +112,7 @@ function Box() {
     </tr>
   ))}
 </tbody>
+      </table>
 
     </div>
   );

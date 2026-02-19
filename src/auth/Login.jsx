@@ -46,7 +46,14 @@ function Login() {
     localStorage.setItem("token", data.token);
 
     login(data.user, data.token);
-    navigate("/admin/home");
+    if (data.user.role === "admin") {
+  navigate("/admin/home");
+} else if (data.user.role === "personnel") {
+  navigate("/personnel/home");
+} else if (data.user.role === "visiteur") {
+  navigate("/visiteur/home");
+}
+
 
   } catch (err) {
     console.log(err);
