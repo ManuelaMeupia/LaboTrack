@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verifyToken, authorizeRoles } = require("../Middleware/authMiddleware");
 
 const {
   createFrigo,
@@ -8,9 +9,10 @@ const {
   deleteFrigo,
 } = require("../controllers/frigoController");
 
-router.post("/", createFrigo);
-router.get("/", getFrigos);
-router.put("/:id", updateFrigo);
-router.delete("/:id", deleteFrigo);
+// SECURITE: Lecture pour auth, CRUD pour admin
+router.post("/", verifyToken, authorizeRoles("admin"), createFrigo);
+router.get("/", verifyToken, getFrigos);
+router.put("/:id", verifyToken, authorizeRoles("admin"), updateFrigo);
+router.delete("/:id", verifyToken, authorizeRoles("admin"), deleteFrigo);
 
 module.exports = router;

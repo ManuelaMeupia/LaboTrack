@@ -22,44 +22,32 @@ function Login() {
   }
 
   async function handleSubmit(e) {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  try {
-    const response = await fetch("http://localhost:5000/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
-    });
+    try {
+      const response = await api.post("/auth/login", formData);
 
-    const data = await response.json();
-    console.log("DATA:", data);
+      const data = response.data;
+      console.log("Login réussi:", data);
 
-    if (!response.ok) {
-      setError(data.message);
-      return;
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
+
+      login(data.user, data.token);
+      
+      if (data.user.role === "admin") {
+        navigate("/admin/home");
+      } else if (data.user.role === "personnel") {
+        navigate("/personnel/home");
+      } else if (data.user.role === "visiteur") {
+        navigate("/visiteur/home");
+      }
+    } catch (err) {
+      console.error("Erreur login:", err);
+      setError(err.response?.data?.message || "Erreur serveur");
     }
-
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("token", data.token);
-
-    login(data.user, data.token);
-    if (data.user.role === "admin") {
-  navigate("/admin/home");
-} else if (data.user.role === "personnel") {
-  navigate("/personnel/home");
-} else if (data.user.role === "visiteur") {
-  navigate("/visiteur/home");
-}
-
-
-  } catch (err) {
-    console.log(err);
-    setError("Erreur serveur");
   }
-}
 
   return (
     <div style={styles.container}>

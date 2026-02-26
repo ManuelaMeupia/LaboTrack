@@ -18,11 +18,14 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Utilisateur non trouvé" });
     }
 
-    const isMatch = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
+    const isMatch = await bcrypt.compare(
+  mot_de_passe,
+  user.mot_de_passe
+);
 
-    if (!isMatch) {
-      return res.status(401).json({ message: "Mot de passe incorrect" });
-    }
+if (!isMatch) {
+  return res.status(401).json({ message: "Mot de passe incorrect" });
+}
 
     // Vérifie que JWT_SECRET existe
     if (!process.env.JWT_SECRET) {

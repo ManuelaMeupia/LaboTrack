@@ -41,7 +41,7 @@ function Echantillons() {
     <div style={{ padding: "20px" }}>
       <h2>Gestion des Échantillons</h2>
 
-      {/* 🔎 Recherche */}
+      {/*Recherche */}
       <div style={{ marginBottom: "20px" }}>
         <input
           type="text"

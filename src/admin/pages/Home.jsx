@@ -1,119 +1,116 @@
-import React from "react";
-import { FaBox, FaWarehouse, FaVial, FaList } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import api from "../../api/AxiosConfig";
+import DashboardKpis from "../components/DashboardKpis";
+import DashboardCharts from "../components/DashboardCharts";
+import RecentSamples from "../components/RecentSamples";
+import "../styles/Dashboard.css";
 
 function Home() {
-  // Données temporaires (mock data)
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [frigos, setFrigos] = useState([]);
+  const [boxes, setBoxes] = useState([]);
+  const [samples, setSamples] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchAll() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [resFrigos, resBoxes, resSamples] = await Promise.all([
+          api.get("/frigos"),
+          api.get("/boxes"),
+          api.get("/samples"),
+        ]);
+
+        if (!mounted) return;
+
+        setFrigos(resFrigos.data || []);
+        setBoxes(resBoxes.data || []);
+        setSamples(resSamples.data || []);
+      } catch (err) {
+        console.error(err);
+        setError("Impossible de charger les données");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    fetchAll();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Stats
   const stats = {
-    frigos: 4,
-    box: 18,
-    categories: 6,
-    echantillons: 248,
+    frigos: frigos.length,
+    boxes: boxes.length,
+    categories: Array.from(new Set(samples.map((s) => s.categorie))).length,
+    samples: samples.length,
   };
 
-  const derniersEchantillons = [
-    { id: 1, nom: "Sang - Patient 045", date: "2025-02-10" },
-    { id: 2, nom: "Urine - Patient 032", date: "2025-02-10" },
-    { id: 3, nom: "Plasma - Patient 088", date: "2025-02-09" },
-    { id: 4, nom: "Salive - Patient 120", date: "2025-02-09" },
-    { id: 5, nom: "Tissu - Patient 099", date: "2025-02-08" },
-  ];
+  // monthly data (last 6 months)
+  const monthlyData = (() => {
+    const map = new Map();
+    samples.forEach((s) => {
+      const d = new Date(s.createdAt || s._id?.getTimestamp?.() || Date.now());
+      const key = d.toLocaleString("default", { month: "short", year: "numeric" });
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    const arr = Array.from(map.entries()).map(([month, count]) => ({ month, count }));
+    // sort by month order (best-effort by parsing)
+    return arr.sort((a, b) => new Date(a.month) - new Date(b.month));
+  })();
+
+  // categories data for pie
+  const categoriesData = (() => {
+    const counts = {};
+    samples.forEach((s) => {
+      counts[s.categorie] = (counts[s.categorie] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  })();
+
+  // frigo occupancy
+  const frigoOccupancy = (() => {
+    return frigos.map((f) => {
+      const frigoBoxes = boxes.filter((b) => b.frigoId?._id === f._id || b.frigoId === f._id);
+      const capacity = frigoBoxes.reduce((s, b) => s + (Number(b.capacite) || 0), 0);
+      const occupied = samples.filter((s) => s.frigoId?._id === f._id || s.frigoId === f._id).length;
+      const occupancy = capacity > 0 ? Math.round((occupied / capacity) * 100) : 0;
+      return { name: f.nom || "-", occupancy };
+    });
+  })();
+
+  async function handleDeleteSample(id) {
+    try {
+      await api.delete(`/samples/${id}`);
+      // refresh samples
+      const res = await api.get("/samples");
+      setSamples(res.data || []);
+    } catch (err) {
+      console.error(err);
+      alert("Impossible de supprimer l'échantillon");
+    }
+  }
 
   return (
-    <div style={styles.container}>
+    <div style={{ padding: 20 }}>
       <h2>Tableau de bord</h2>
 
-      {/* Cartes statistiques */}
-      <div style={styles.cards}>
+      {error && <div style={{ color: "red" }}>{error}</div>}
 
-        <div style={styles.card}>
-          <FaWarehouse style={styles.icon} />
-          <h3>{stats.frigos}</h3>
-          <p>Frigos</p>
-        </div>
+      <DashboardKpis stats={!loading ? stats : null} />
 
-        <div style={styles.card}>
-          <FaBox style={styles.icon} />
-          <h3>{stats.box}</h3>
-          <p>Box</p>
-        </div>
+      <DashboardCharts monthlyData={monthlyData} categoriesData={categoriesData} frigoOccupancy={frigoOccupancy} />
 
-        <div style={styles.card}>
-          <FaList style={styles.icon} />
-          <h3>{stats.categories}</h3>
-          <p>Catégories</p>
-        </div>
-
-        <div style={styles.card}>
-          <FaVial style={styles.icon} />
-          <h3>{stats.echantillons}</h3>
-          <p>Échantillons</p>
-        </div>
-
-      </div>
-
-      {/* Derniers échantillons */}
-      <div style={styles.tableCard}>
-        <h3>Derniers échantillons ajoutés</h3>
-
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Date d'ajout</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {derniersEchantillons.map((e) => (
-              <tr key={e.id}>
-                <td>{e.nom}</td>
-                <td>{e.date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
+      <RecentSamples samples={samples.slice().sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt)).slice(0,8)} onDelete={handleDeleteSample} />
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: "20px",
-  },
-  cards: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "30px",
-  },
-  card: {
-    width: "23%",
-    background: "white",
-    padding: "20px",
-    textAlign: "center",
-    borderRadius: "10px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-  },
-  icon: {
-    fontSize: "30px",
-    marginBottom: "10px",
-    color: "#052c65",
-  },
-  tableCard: {
-    background: "white",
-    padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-  },
-  table: {
-    width: "100%",
-    marginTop: "15px",
-    borderCollapse: "collapse",
-  },
-  thtd: {
-    padding: "10px",
-  },
-};
 
 export default Home;

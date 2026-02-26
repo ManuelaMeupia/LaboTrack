@@ -18,7 +18,7 @@ function Box() {
   }, []);
 
   async function fetchBoxes() {
-    const res = await api.get("/boxes"); // ✅ corrigé
+    const res = await api.get("/boxes"); 
     setBoxes(res.data);
   }
 
@@ -35,8 +35,7 @@ function Box() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    await api.post("/boxes", formData); // ✅ corrigé
-
+    await api.post("/boxes", formData); 
     setFormData({
       nom: "",
       capacite: "",
@@ -48,7 +47,7 @@ function Box() {
 
   async function handleDelete(id) {
     if (window.confirm("Supprimer cette box ?")) {
-      await api.delete(`/boxes/${id}`); // ✅ corrigé
+      await api.delete(`/boxes/${id}`); 
       fetchBoxes();
     }
   }

@@ -8,6 +8,14 @@ const boxSchema = new mongoose.Schema(
       ref: "Frigo",
     },
     capacite: Number,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
